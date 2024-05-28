@@ -1,5 +1,6 @@
 # Compiler_Parser
 
 1. python -m venv venv
-2. pip install -r requirements.txt
-3. python parser.py test.txt
+2. ./venv/Scripts/activate
+3. pip install -r requirements.txt
+4. python parser.py test.txt
