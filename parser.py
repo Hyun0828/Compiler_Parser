@@ -4,6 +4,7 @@ from anytree import Node, RenderTree
 import pandas as pd
 import math
 
+# Unambiguous Context Free Grammar
 cfg = {
     0: 'CODE -> VDECL CODE',
     1: 'CODE -> FDECL CODE',
@@ -41,9 +42,8 @@ cfg = {
     33: 'RETURN -> return RHS semi'
 }
 
+# Create parsing table
 parsing_table = []
-
-# Parsing table
 file_path = 'Parsing_Table.xlsx'
 df = pd.read_excel(file_path, sheet_name='Sheet1')
 
@@ -54,11 +54,11 @@ for _, row in df.iterrows():
             row_dict[df.columns[i]] = cell
     parsing_table.append(row_dict)
 
-for index, row_dict in enumerate(parsing_table):
-    print(f"{index}: {row_dict}")
+# for index, row_dict in enumerate(parsing_table):
+#     print(f"{index}: {row_dict}")
 
 
-# input token
+# Read input token file
 def get_input_token():
     if len(sys.argv) != 2:
         print("Usage: python parser.py <filename>")
@@ -67,7 +67,7 @@ def get_input_token():
     filename = sys.argv[1]
 
     try:
-        with open(filename, 'r', encoding='utf-8', errors='replace') as file: # 입실론 인코딩
+        with open(filename, 'r', encoding='utf-8', errors='replace') as file:  # 입실론 인코딩
             content = file.read().split()
 
     except FileNotFoundError:
@@ -80,6 +80,7 @@ def get_input_token():
     return content
 
 
+# SLR-Parser
 class SLRParser:
     def __init__(self, parsing_table, cfg, right_sub_string):
         self.parsing_table = parsing_table
@@ -90,62 +91,61 @@ class SLRParser:
         self.node_stack = []
 
     def parsing(self):
-        while self.right_sub_string:
-            print("----------")
-            print("left sub string : "+str(self.left_sub_string))
-            print("right sub string : "+str(self.right_sub_string))
-            token = self.right_sub_string[0]
-            current_state = self.state_stack[-1]
-            print("current state : " + str(int(current_state)))
-            print("input symbol : " + str(token))
+        while self.right_sub_string:  # until all input token is read
+            # print("----------")
+            # print("left sub string : " + str(self.left_sub_string))
+            # print("right sub string : " + str(list(self.right_sub_string)))
+            token = self.right_sub_string[0]  # input symbol
+            current_state = self.state_stack[-1]  # current state
+            # print("current state : " + str(int(current_state)))
+            # print("input symbol : " + str(token))
 
-            if str(token) not in self.parsing_table[int(current_state)]:
-                print("reject")
+            if token not in self.parsing_table[int(current_state)]:  # if left substring is not viable prefix
+                print("'", *self.left_sub_string, token, "'", "is not viable prefix")
                 break
 
-            action_state = self.parsing_table[int(current_state)][str(token)]  # s2, r5
-            if action_state == "acc":
+            action_state = self.parsing_table[int(current_state)][str(token)]  # action
+            if action_state == "acc":  # success parsing
                 print("accept")
-                break
+                return self.node_stack[-1]
 
-            action = action_state[0]  # s
-            new_state = int(action_state[1:])  # 2
+            action = action_state[0]
+            new_state = int(action_state[1:])
 
-            print("action : " + action + str(new_state))
+            # print("action : ", action, new_state)
 
-            if action == 's':  # shift
-                self.left_sub_string.append(self.right_sub_string.popleft())  # 오른쪽 첫번째 원소 팝 해서 왼쪽에 추가
-                self.state_stack.append(new_state)  # state 추가
-                print('token : ' + str(token))
+            if action == 's':  # if action is shift
+                self.left_sub_string.append(self.right_sub_string.popleft())  # shift
+                self.state_stack.append(new_state)  # add new state in stack
+                # print('token : ' + str(token))
                 new_node = Node(str(token))
-                self.node_stack.append(new_node)
+                self.node_stack.append(new_node)  # add new Node in node stack
 
-            elif action == 'r':  # reduce
-                lhs = self.cfg[new_state].split()[0]  # reduce할 문법을 공백 기준으로 잘랐을 때 첫번째 원소
-                rhs = self.cfg[new_state].split()[2:]  # LHS, -> 제외 인덱스 2번부터 끝까지 RHS
+            elif action == 'r':  # if action is reduce
+                lhs = self.cfg[new_state].split()[0]  # LHS of production number = new state
+                rhs = self.cfg[new_state].split()[2:]  # RHS of production number = new state
 
                 new_node = Node(lhs)
                 children = []
-                for _ in range(len(rhs)):  # RHS 개수만큼
-                    self.left_sub_string.pop()  # left에서  reduce
-                    self.state_stack.pop()  # 해당 state도 같이 지움
-                    children.append(self.node_stack.pop())
-                self.left_sub_string.append(lhs)  # reduce 후 LHS 추가
+                for _ in range(len(rhs)):  # Repeat as many symbols as there are in RHS
+                    self.left_sub_string.pop()  # remove symbol
+                    self.state_stack.pop()  # remove state in stack
+                    children.append(self.node_stack.pop())  # remove node in node stack
+                self.left_sub_string.append(lhs)  # Reduce
 
-                new_node.children = children[::-1]
-                self.node_stack.append(new_node)
-                print('current state : ' + str(int(self.state_stack[-1])))
-                goto_state = self.parsing_table[int(self.state_stack[-1])][lhs]
-                print(lhs)
+                new_node.children = children[::-1]  # construct parse tree
+                self.node_stack.append(new_node)  # add node to stack
+                # print('current state : ' + str(int(self.state_stack[-1])))
+                goto_state = self.parsing_table[int(self.state_stack[-1])][lhs]  # goto
+                # print(lhs)
                 self.state_stack.append(goto_state)  # goto
-            # todo : error
-        return self.node_stack[-1]  # 파싱 성공한 경우에 트리가 제대로 나옴
 
 
 if __name__ == '__main__':
     right_sub_string = deque(get_input_token())
-    right_sub_string.append('$') # 이거 있어야 파싱 끝까지 함
+    right_sub_string.append('$')  # 이거 있어야 파싱 끝까지 함
     parser = SLRParser(parsing_table, cfg, right_sub_string)
     root = parser.parsing()
-    for pre, fill, node in RenderTree(root):
-        print("%s%s" % (pre, node.name))
+    if root is not None:
+        for pre, fill, node in RenderTree(root):
+            print("%s%s" % (pre, node.name))
