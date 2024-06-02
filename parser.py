@@ -6,41 +6,43 @@ import math
 
 # Unambiguous Context Free Grammar
 cfg = {
-    0: 'CODE -> VDECL CODE',
-    1: 'CODE -> FDECL CODE',
-    2: 'CODE -> ϵ',
-    3: 'VDECL -> vtype id semi',
-    4: 'VDECL -> vtype ASSIGN semi',
-    5: 'ASSIGN -> id assign RHS',
-    6: 'RHS -> EXPR',
-    7: 'RHS -> literal',
-    8: 'RHS -> character',
-    9: 'RHS -> boolstr',
-    10: 'EXPR -> EXPR addsub TERM',
-    11: 'EXPR -> TERM',
-    12: 'TERM -> TERM multdiv FACTOR',
-    13: 'TERM -> FACTOR',
-    14: 'FACTOR -> lparen EXPR rparen',
-    15: 'FACTOR -> id',
-    16: 'FACTOR -> num',
-    17: 'FDECL -> vtype id lparen ARG rparen lbrace BLOCK RETURN rbrace',
-    18: 'ARG -> vtype id MOREARGS',
-    19: 'ARG -> ϵ',
-    20: 'MOREARGS -> comma vtype id MOREARGS',
-    21: 'MOREARGS -> ϵ',
-    22: 'BLOCK -> STMT BLOCK',
-    23: 'BLOCK -> ϵ',
-    24: 'STMT -> VDECL',
-    25: 'STMT -> ASSIGN semi',
-    26: 'STMT -> if lparen COND rparen lbrace BLOCK rbrace ELSE',
-    27: 'STMT -> while lparen COND rparen lbrace BLOCK rbrace',
-    28: 'COND -> COND comp PRED',
-    29: 'COND -> boolstr',
-    30: 'PRED -> boolstr',
-    31: 'ELSE -> else lbrace BLOCK rbrace',
-    32: 'ELSE -> ϵ',
-    33: 'RETURN -> return RHS semi'
+    0: "CODE' -> CODE",
+    1: 'CODE -> VDECL CODE',
+    2: 'CODE -> FDECL CODE',
+    3: 'CODE -> ϵ',
+    4: 'VDECL -> vtype id semi',
+    5: 'VDECL -> vtype ASSIGN semi',
+    6: 'ASSIGN -> id assign RHS',
+    7: 'RHS -> EXPR',
+    8: 'RHS -> literal',
+    9: 'RHS -> character',
+    10: 'RHS -> boolstr',
+    11: 'EXPR -> EXPR addsub TERM',
+    12: 'EXPR -> TERM',
+    13: 'TERM -> TERM multdiv FACTOR',
+    14: 'TERM -> FACTOR',
+    15: 'FACTOR -> lparen EXPR rparen',
+    16: 'FACTOR -> id',
+    17: 'FACTOR -> num',
+    18: 'FDECL -> vtype id lparen ARG rparen lbrace BLOCK RETURN rbrace',
+    19: 'ARG -> vtype id MOREARGS',
+    20: 'ARG -> ϵ',
+    21: 'MOREARGS -> comma vtype id MOREARGS',
+    22: 'MOREARGS -> ϵ',
+    23: 'BLOCK -> STMT BLOCK',
+    24: 'BLOCK -> ϵ',
+    25: 'STMT -> VDECL',
+    26: 'STMT -> ASSIGN semi',
+    27: 'STMT -> if lparen COND rparen lbrace BLOCK rbrace ELSE',
+    28: 'STMT -> while lparen COND rparen lbrace BLOCK rbrace',
+    29: 'COND -> COND comp PRED',
+    30: 'COND -> boolstr',
+    31: 'PRED -> boolstr',
+    32: 'ELSE -> else lbrace BLOCK rbrace',
+    33: 'ELSE -> ϵ',
+    34: 'RETURN -> return RHS semi'
 }
+
 
 # Create parsing table
 parsing_table = []
@@ -53,9 +55,6 @@ for _, row in df.iterrows():
         if not isinstance(cell, float) or not math.isnan(cell):
             row_dict[df.columns[i]] = cell
     parsing_table.append(row_dict)
-
-# for index, row_dict in enumerate(parsing_table):
-#     print(f"{index}: {row_dict}")
 
 
 # Read input token file
@@ -92,13 +91,8 @@ class SLRParser:
 
     def parsing(self):
         while self.right_sub_string:  # until all input token is read
-            # print("----------")
-            # print("left sub string : " + str(self.left_sub_string))
-            # print("right sub string : " + str(list(self.right_sub_string)))
             token = self.right_sub_string[0]  # input symbol
             current_state = self.state_stack[-1]  # current state
-            # print("current state : " + str(int(current_state)))
-            # print("input symbol : " + str(token))
 
             if token not in self.parsing_table[int(current_state)]:  # if left substring is not viable prefix
                 print("'", *self.left_sub_string, token, "'", "is not viable prefix")
@@ -112,12 +106,9 @@ class SLRParser:
             action = action_state[0]
             new_state = int(action_state[1:])
 
-            # print("action : ", action, new_state)
-
             if action == 's':  # if action is shift
                 self.left_sub_string.append(self.right_sub_string.popleft())  # shift
                 self.state_stack.append(new_state)  # add new state in stack
-                # print('token : ' + str(token))
                 new_node = Node(str(token))
                 self.node_stack.append(new_node)  # add new Node in node stack
 
@@ -135,9 +126,7 @@ class SLRParser:
 
                 new_node.children = children[::-1]  # construct parse tree
                 self.node_stack.append(new_node)  # add node to stack
-                # print('current state : ' + str(int(self.state_stack[-1])))
                 goto_state = self.parsing_table[int(self.state_stack[-1])][lhs]  # goto
-                # print(lhs)
                 self.state_stack.append(goto_state)  # goto
 
 
