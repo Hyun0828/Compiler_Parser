@@ -1,0 +1,1 @@
+vtype id lparen ϵ rparen lbrace if lparen boolstr comp boolstr rparen lbrace while lparen boolstr comp boolstr rparen lbrace ϵ rbrace ϵ rbrace else lbrace ϵ rbrace ϵ return literal semi rbrace ϵ
