@@ -136,5 +136,6 @@ if __name__ == '__main__':
     parser = SLRParser(parsing_table, cfg, right_sub_string)
     root = parser.parsing()
     if root is not None:
+        print()
         for pre, fill, node in RenderTree(root):
             print("%s%s" % (pre, node.name))
